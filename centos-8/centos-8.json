@@ -1,0 +1,146 @@
+{
+  "variables": {
+    "boot_wait": "10s",
+
+    "iso_url": "http://mirrors.powernet.com.ru/centos/8.2.2004/isos/x86_64/CentOS-8.2.2004-x86_64-boot.iso",
+    "iso_checksum": "c67876a5602faa17f68b40ccf2628799b87454aa67700f0f57eec15c6ccdd98c",
+    "iso_checksum_type": "sha256",
+
+    "vm_name": "packer-centos-8",
+    "vm_cpu_num": "1",
+    "vm_mem_size": "2048",
+    "vm_disk_size": "10240",
+    "vm_video_mem_size": "8192",
+
+    "vsphere_server": "",
+    "vsphere_username": "",
+    "vsphere_password": "",
+    "vsphere_datacenter": "",
+    "vsphere_cluster": "",
+    "vsphere_datastore": "",
+    "vsphere_network": "",
+
+    "esxi_host": "",
+    "esxi_username": "",
+    "esxi_password": "",
+    "esxi_datastore": "",
+
+    "host_username": "packer",
+    "host_password": ""
+  },
+  "builders": [
+    {
+      "type": "vmware-iso",
+      "name": "esxi-iso",
+
+      "boot_wait": "{{ user `boot_wait` }}",
+
+      "remote_host": "{{user `esxi_host`}}",
+      "remote_username": "{{user `esxi_username`}}",
+      "remote_password": "{{user `esxi_password`}}",
+      "remote_type": "esx5",
+      "remote_datastore": "{{user `esxi_datastore`}}",
+
+      "guest_os_type": "centos-64",
+      "disk_size": "{{ user `vm_disk_size` }}",
+      "disk_type_id": "thin",
+      "format": "ova",
+
+      "iso_url": "{{ user `iso_url` }}",
+      "iso_checksum": "{{ user `iso_checksum_type` }}:{{ user `iso_checksum` }}",
+
+      "ssh_username": "{{ user `host_username` }}",
+      "ssh_password": "{{ user `host_password` }}",
+      "ssh_port": 22,
+      "ssh_timeout": "30m",
+
+      "shutdown_command": "echo '{{ user `host_password` }}'|sudo -S /sbin/halt -h -p",
+
+      "vm_name": "{{ user `vm_name` }}",
+      "vmx_data": {
+        "numvcpus": "{{user `vm_cpu_num`}}",
+        "memsize": "{{user `vm_mem_size`}}",
+        "ethernet0.present": "TRUE",
+        "ethernet0.connectionType": "bridged",
+        "ethernet0.virtualDev": "vmxnet3",
+        "ethernet0.networkName": "VM Network",
+        "ethernet0.wakeOnPcktRcv": "FALSE",
+        "ethernet0.addressType": "generated",
+        "remotedisplay.vnc.enabled": "TRUE"
+      },
+
+      "http_directory": "http",
+      "headless": false,
+      "vnc_disable_password": "true",
+      "boot_command": [
+        "<tab><bs><bs><bs><bs><bs>text ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ks.cfg<enter><wait>"
+      ]
+    },
+    {
+      "type": "vsphere-iso",
+
+      "vcenter_server": "{{ user `vsphere_server` }}",
+      "username": "{{ user `vsphere_username` }}",
+      "password": "{{user `vsphere_password`}}",
+      "insecure_connection": "true",
+      "datacenter": "{{ user `vsphere_datacenter` }}",
+      "cluster": "{{ user `vsphere_cluster` }}",
+      "datastore": "{{user `vsphere_datastore`}}",
+
+      "vm_name": "{{user `vm_name`}}",
+      "host": "{{user `esxi_host`}}",
+      "convert_to_template": "true",
+
+      "vm_version": 14,
+      "guest_os_type": "centos8_64Guest",
+      "firmware": "efi-secure",
+
+      "ssh_username": "{{user `host_username`}}",
+      "ssh_password": "{{user `host_password`}}",
+
+      "CPUs": "{{user `vm_cpu_num`}}",
+      "RAM": "{{user `vm_mem_size`}}",
+      "video_ram": "{{user `vm_video_mem_size`}}",
+
+      "disk_controller_type": "pvscsi",
+      "storage": [
+        {
+          "disk_size": "{{user `vm_disk_size`}}",
+          "disk_thin_provisioned": true
+        }
+      ],
+
+      "network_adapters": [
+        {
+          "network": "{{user `vsphere_network`}}",
+          "network_card": "vmxnet3"
+        }
+      ],
+
+      "tools_upgrade_policy": "true",
+
+      "iso_url": "{{ user `iso_url` }}",
+      "iso_checksum": "{{ user `iso_checksum_type` }}:{{ user `iso_checksum` }}",
+
+      "http_directory": "http",
+      "boot_command": [
+        "<up>e<wait><down><wait><down><wait><end><wait><bs><bs><bs><bs><bs>text ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ks.cfg<leftCtrlOn>x<leftCtrlOff>"
+      ],
+
+      "export": {
+        "force": true,
+        "output_directory": "./output",
+        "options": ["nodevicesubtypes"]
+      }
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "shell",
+      "execute_command": "echo '{{ user `host_password` }}'|{{.Vars}} sudo -S -E bash '{{.Path}}'",
+      "scripts": [
+        "./provisioners/base.sh"
+      ]
+    }
+  ]
+}

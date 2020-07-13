@@ -1,0 +1,12 @@
+{
+  "vsphere_server": "VSPHERE_FQDN",
+  "vsphere_username": "VSPHERE_USERNAME",
+  "vsphere_datacenter": "VSPHERE_DC",
+  "vsphere_cluster": "VSPHERE_CS",
+  "vsphere_datastore": "VSPHERE_DS",
+  "vsphere_network": "VSPHERE_NET",
+
+  "esxi_host": "ESXI_FQDN",
+  "esxi_username": "ESXI_USERNAME",
+  "esxi_datastore": "ESXI_DS"
+}
