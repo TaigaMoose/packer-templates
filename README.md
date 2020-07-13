@@ -1,4 +1,5 @@
 ## Packer templates
+**Packer templates fully tested on real infrastructure**
 
 ### CentOS 8 template
 
