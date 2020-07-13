@@ -25,4 +25,5 @@ Build:
 You must setting up your vSphere or ESXi settings in `vars.json`
 Then execute:
 
-    packer build -only=vsphere-iso -force -var-file vars.json -var 'vsphere_password=PASSWORD' -var 'host_password=PASSWORD' centos-8.json
+    packer build -only=vsphere-iso -force -var-file vars.json \
+      -var 'vsphere_password=PASSWORD' -var 'host_password=PASSWORD' centos-8.json
